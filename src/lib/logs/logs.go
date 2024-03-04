@@ -5,8 +5,7 @@ import (
 	"fmt"
 )
 
-func Debug(log_msg string, data ...any) {
-
+func SendLog(ch MessageChannel, log_msg string, data []any) {
 	dm := make(map[string]string)
 
 	if len(data)%2 != 0 {
@@ -24,124 +23,25 @@ func Debug(log_msg string, data ...any) {
 		}
 	}
 
-	msg, err := Msg(log_msg, &dm)
+	ch <- &Message{Msg: log_msg, Data: dm}
+}
 
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	Handler.Channel.Debug <- msg
+func Debug(log_msg string, data ...any) {
+	SendLog(Handler.Channel.Debug, log_msg, data)
 }
 
 func Info(log_msg string, data ...any) {
-	dm := make(map[string]string)
-
-	if len(data)%2 != 0 {
-		fmt.Println(errors.New("Message Data has a key without value --> invalid pair").Error())
-	}
-
-	if len(data) > 0 {
-		k := ""
-		for i, d := range data {
-			if i%2 == 0 {
-				k = fmt.Sprint(d)
-			} else {
-				dm[k] = fmt.Sprint(d)
-			}
-		}
-	}
-
-	msg, err := Msg(log_msg, &dm)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	Handler.Channel.Info <- msg
+	SendLog(Handler.Channel.Info, log_msg, data)
 }
 
 func Warn(log_msg string, data ...any) {
-	dm := make(map[string]string)
-
-	if len(data)%2 != 0 {
-		fmt.Println(errors.New("Message Data has a key without value --> invalid pair").Error())
-	}
-
-	if len(data) > 0 {
-		k := ""
-		for i, d := range data {
-			if i%2 == 0 {
-				k = fmt.Sprint(d)
-			} else {
-				dm[k] = fmt.Sprint(d)
-			}
-		}
-	}
-
-	msg, err := Msg(log_msg, &dm)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	Handler.Channel.Warn <- msg
+	SendLog(Handler.Channel.Warn, log_msg, data)
 }
 
 func Error(log_msg string, data ...any) {
-	dm := make(map[string]string)
-
-	if len(data)%2 != 0 {
-		fmt.Println(errors.New("Message Data has a key without value --> invalid pair").Error())
-	}
-
-	if len(data) > 0 {
-		k := ""
-		for i, d := range data {
-			if i%2 == 0 {
-				k = fmt.Sprint(d)
-			} else {
-				dm[k] = fmt.Sprint(d)
-			}
-		}
-	}
-
-	msg, err := Msg(log_msg, &dm)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	Handler.Channel.Error <- msg
+	SendLog(Handler.Channel.Error, log_msg, data)
 }
 
 func Fatal(log_msg string, data ...any) {
-	dm := make(map[string]string)
-
-	if len(data)%2 != 0 {
-		fmt.Println(errors.New("Message Data has a key without value --> invalid pair").Error())
-	}
-
-	if len(data) > 0 {
-		k := ""
-		for i, d := range data {
-			if i%2 == 0 {
-				k = fmt.Sprint(d)
-			} else {
-				dm[k] = fmt.Sprint(d)
-			}
-		}
-	}
-
-	msg, err := Msg(log_msg, &dm)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	Handler.Channel.Fatal <- msg
+	SendLog(Handler.Channel.Fatal, log_msg, data)
 }
