@@ -1,14 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"gokain/types"
 	utils "gokain/utils"
-	"time"
+
+	"log"
+
+	ui "github.com/gizak/termui/v3"
 
 	feat "gokain/feat"
-
-	logs "github.com/slowlorizz/gokain-logs"
+	tui "gokain/tui"
 )
 
 //  go mod edit -replace gokain/logs=../lib/logs
@@ -18,48 +19,58 @@ import (
 func main() {
 	args := utils.Args{}
 	args.Load()
-	logs.Handler.Start(args.Verbose) // starts the async Log-Handler
-
-	logs.Info("Log-Handler started!")
 
 	if len(args.Hash) < 1 {
-		logs.Fatal("No Hash in Args [-]")
+		log.Fatal("No Hash in Args [-]")
 		return
-	} else {
-		logs.Debug("Hash in args [+]", "hash", args.Hash)
 	}
+
+	if err := ui.Init(); err != nil {
+		log.Fatalf("failed to initialize termui: %v", err)
+	}
+	defer ui.Close()
 
 	foundCH := make(chan types.ResultPair)
 	stopCH := make(chan bool)
 
-	var result types.ResultPair
+	//var result types.ResultPair
 
 	seeds := DistributeSeeds(args.Threads)
 
+	height := 3
+
+	thread_components := make([]*tui.ThreadComponent, args.Threads)
+
 	for i := 0; i < args.Threads; i++ {
-		go feat.CrackHash(stopCH, foundCH, args.Hash, args.HashType, seeds[i])
+		thc := tui.New_ThreadComponent(i+1, seeds[i], 1, (height+1)*i)
+		thread_components[i] = thc
+		go feat.CrackHash(stopCH, foundCH, args.Hash, args.HashType, seeds[i], thc)
 	}
 
-join_loop:
+	uiEvents := ui.PollEvents()
+	//main_loop:
 	for {
 		select {
-		case v := <-foundCH:
-			result = v
-			logs.Info("Found", "plaintext", v.PlainText, "hash", v.Hash)
-			break join_loop
+		case e := <-uiEvents:
+			switch e.ID {
+			case "q", "<C-c>":
+				return
+			}
+		case <-foundCH:
+			//result = v
+			//close(foundCH)
+			stopCH <- true
+			close(stopCH)
+			for _, tc := range thread_components {
+				tc.Render()
+			}
+			//break main_loop
 		default:
-			time.Sleep(500 * time.Millisecond)
+			for _, tc := range thread_components {
+				tc.Render()
+			}
 		}
 	}
-
-	stopCH <- true
-
-	logs.Handler.Join() // Prints the last received Log-Message before program-end
-
-	fmt.Printf("\n\n#---------------------------------------------------------------------------------------------------------------------#\n\n")
-	fmt.Printf("|  Plain-Text: \033[38;2;0;255;0m%s\033[0m  | Hash: \033[38;2;0;128;255m%s\033[0m  |\n", result.PlainText, result.Hash)
-	fmt.Printf("\n\n#---------------------------------------------------------------------------------------------------------------------#\n\n")
-	fmt.Println(" ")
 }
 
 func DistributeSeeds(threads int) []string {
