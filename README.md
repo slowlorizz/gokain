@@ -1,2 +1,2 @@
 # gokain
- A Password and Hash Cracker Utility and library written in Go
+ A Hash Cracker Utility written in Go
