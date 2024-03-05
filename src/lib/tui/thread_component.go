@@ -21,7 +21,7 @@ type ThreadComponent struct {
 }
 
 func New_ThreadComponent(id int, seed string, x int, y int) *ThreadComponent {
-	component := ThreadComponent{Id: id, HashPH: widgets.NewParagraph(), TxtPH: widgets.NewParagraph(), SeedPH: widgets.NewParagraph(), XPos: x, YPos: y, HashWidth: 60, Height: 3, TxtWidth: 15, SeedWidth: 30}
+	component := ThreadComponent{Id: id, HashPH: widgets.NewParagraph(), TxtPH: widgets.NewParagraph(), SeedPH: widgets.NewParagraph(), XPos: x, YPos: y, HashWidth: 70, Height: 3, TxtWidth: 15, SeedWidth: 30}
 
 	xSpace := 2
 
@@ -31,13 +31,11 @@ func New_ThreadComponent(id int, seed string, x int, y int) *ThreadComponent {
 	component.SeedPH.TextStyle.Fg = ui.ColorWhite
 	component.SeedPH.BorderStyle.Fg = ui.ColorWhite
 
-	component.HashPH.Title = fmt.Sprintf("[%d] Hash", component.Id)
 	component.HashPH.Text = " "
 	component.HashPH.SetRect(component.XPos+component.SeedWidth+xSpace, component.YPos, component.XPos+component.SeedWidth+xSpace+component.HashWidth, component.YPos+component.Height)
 	component.HashPH.TextStyle.Fg = ui.ColorWhite
 	component.HashPH.BorderStyle.Fg = ui.ColorWhite
 
-	component.TxtPH.Title = fmt.Sprintf("[%d] Text", component.Id)
 	component.TxtPH.Text = " "
 	component.TxtPH.SetRect(component.XPos+component.SeedWidth+xSpace+component.HashWidth+xSpace, component.YPos, component.XPos+component.SeedWidth+xSpace+component.HashWidth+xSpace+component.TxtWidth, component.YPos+component.Height)
 	component.TxtPH.TextStyle.Fg = ui.ColorWhite
