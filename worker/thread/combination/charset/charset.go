@@ -58,3 +58,19 @@ func (cs *CharSet) Build() {
 		cs.Add(EXT_SPC)
 	}
 }
+
+func New(nums bool, lc bool, uc bool, spc bool, ext_lc bool, ext_uc bool, ext_spc bool) *CharSet {
+	cs := CharSet{
+		Numbers:   nums,
+		LowerCase: lc,
+		UpperCase: uc,
+		Special:   spc,
+		Ext_LC:    ext_lc,
+		Ext_UC:    ext_uc,
+		Ext_Spc:   ext_spc,
+	}
+
+	cs.Build()
+
+	return &cs
+}
