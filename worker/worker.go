@@ -39,7 +39,7 @@ func main() {
 		case e := <-ui.HANDLER.Events:
 			if ui.HANDLER.HandleEvent(&e) {
 				thread.StopAll()
-				return Result
+				return
 			}
 		case res := <-thread.FOUND_CH:
 			Result = res
