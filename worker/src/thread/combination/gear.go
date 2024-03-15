@@ -1,7 +1,7 @@
 package combination
 
 import (
-	"github.com/slowlorizz/gokain/worker/thread/combination/wheel"
+	"github.com/slowlorizz/gokain/worker/src/thread/combination/wheel"
 )
 
 type Gear struct {

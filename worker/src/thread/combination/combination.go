@@ -8,8 +8,8 @@ import (
 	"encoding/hex"
 	"hash"
 
-	"github.com/slowlorizz/gokain/worker/thread/combination/charset"
-	"github.com/slowlorizz/gokain/worker/thread/combination/wheel"
+	"github.com/slowlorizz/gokain/worker/src/thread/combination/charset"
+	"github.com/slowlorizz/gokain/worker/src/thread/combination/wheel"
 )
 
 type (

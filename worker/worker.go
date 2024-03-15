@@ -1,19 +1,24 @@
 package main
 
 import (
-	"flag"
+	"fmt"
 
-	"github.com/slowlorizz/gokain/worker/thread"
-	"github.com/slowlorizz/gokain/worker/thread/combination"
-	"github.com/slowlorizz/gokain/worker/thread/combination/charset"
-	"github.com/slowlorizz/gokain/worker/ui"
+	"github.com/slowlorizz/gokain/worker/src/args"
+	"github.com/slowlorizz/gokain/worker/src/thread"
+	"github.com/slowlorizz/gokain/worker/src/thread/combination/charset"
+	"github.com/slowlorizz/gokain/worker/src/ui"
+
+	tui "github.com/gizak/termui/v3"
 )
 
 var Result thread.ResultPair
 
 func main() {
-	args := Args{}
-	args.Load()
+	err := args.Load()
+
+	if err != nil {
+		err.Raise()
+	}
 
 	ui.Init()
 
@@ -31,14 +36,23 @@ func main() {
 
 	for i, v := range seeds {
 		th := thread.New(i+1, args.Hash, v, args.HashType, *chrs, thread.FOUND_CH, thread.JOIN_CH)
+		ui.Components = append(ui.Components, &th.UiC)
 		go th.Start()
 	}
 
+	ui.Events = tui.PollEvents()
 	for {
 		select {
-		case e := <-ui.HANDLER.Events:
-			if ui.HANDLER.HandleEvent(&e) {
+		case e := <-ui.Events:
+			switch e.ID {
+			case "q", "<C-c>":
 				thread.StopAll()
+				tui.Close()
+
+				if Result.PlainText != "" && Result.Hash != "" {
+					fmt.Printf("\nHASH:  %s\nTEXT:  %s\n", Result.Hash, Result.PlainText)
+				}
+
 				return
 			}
 		case res := <-thread.FOUND_CH:
@@ -48,38 +62,5 @@ func main() {
 		default:
 			ui.Render()
 		}
-	}
-}
-
-type (
-	Args struct {
-		Threads  int
-		Hash     string
-		HashType combination.HashType
-	}
-)
-
-func (args *Args) Load() {
-	t := flag.Int("th", 1, "usage: -th | how many threads are created")
-	h := flag.String("hash", "", "usage: --hash | the hash to crack")
-	ht := flag.String("type", "sha1", "the type of the hash to crack (LOWERCASE)\nSupports following:\nsha1, sha224, sha256, sha384, sha512\nmd4, md5\n| Default: sha1")
-
-	flag.Parse()
-
-	args.Hash = *h
-	args.Threads = *t
-
-	switch *ht {
-	case "sha1", "SHA1":
-		args.HashType = combination.SHA1
-	case "sha256", "SHA256":
-		args.HashType = combination.SHA256
-	case "sha512", "SHA512":
-		args.HashType = combination.SHA512
-	case "md5", "MD5":
-		args.HashType = combination.MD5
-
-	default:
-		panic("Unknown Hashtype!")
 	}
 }

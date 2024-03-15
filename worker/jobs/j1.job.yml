@@ -1,0 +1,19 @@
+---
+job:
+  id: 1
+  threads: 2
+  hash:
+    string: a9993e364706816aba3e25717850c26c9cd0d89d
+    type: sha1
+    encoding: hex
+  chars:
+    # includes the listed, if not listed its not included
+    standard:
+      - numbers
+      - lower_case
+      - upper_case
+      - special
+    extended:
+      - lower_case
+      - upper_case
+      - special
