@@ -18,7 +18,7 @@ type (
 		ID          int
 		Combination combination.Combination
 		CipherText  string
-		UiC         ui.ThreadComponent
+		UiC         *ui.ThreadComponent
 		FoundCH     chan ResultPair
 		JoinCH      chan Signal
 	}
@@ -27,13 +27,15 @@ type (
 var FOUND_CH (chan ResultPair) = make(chan ResultPair)
 var JOIN_CH (chan Signal) = make(chan Signal)
 
+var JOINED bool = false
+
 func New(id int, ct string, seeds []string, ht combination.HashType, cs charset.CharSet, foundCH chan ResultPair, joinCH chan Signal) *Thread {
-	// charset.CharSet{Numbers: true, LowerCase: true, UpperCase: true, Special: true, Ext_LC: false, Ext_UC: false, Ext_Spc: false}
 	return &Thread{
+		ID:          id,
 		Combination: *combination.New(seeds, cs, ht),
 		FoundCH:     foundCH,
 		JoinCH:      joinCH,
-		UiC:         *ui.New_ThreadComponent(id, ui.X_SPACER, (ui.Y_SPACER+ui.LINE_HEIGHT)*(id-1)),
+		UiC:         ui.New_ThreadComponent(id, ht),
 		CipherText:  ct,
 	}
 }
@@ -44,10 +46,10 @@ func (T *Thread) Start() {
 		case <-T.JoinCH:
 			return
 		default:
-			pt, hsh := T.Combination.Cycle()
+			pt, hsh := T.Combination.Next()
 
-			T.UiC.HashC.SetText(hsh)
-			T.UiC.PtC.SetText(pt)
+			T.UiC.HashC.Text = hsh
+			T.UiC.PtC.Text = pt
 
 			if hsh == T.CipherText {
 				T.FoundCH <- ResultPair{Hash: hsh, PlainText: pt}
@@ -59,6 +61,8 @@ func (T *Thread) Start() {
 }
 
 func StopAll() {
-	JOIN_CH <- Signal{}
-	close(JOIN_CH)
+	if !JOINED {
+		close(JOIN_CH)
+		JOINED = true
+	}
 }

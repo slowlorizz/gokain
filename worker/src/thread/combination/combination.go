@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
+	"fmt"
 	"hash"
 
 	"github.com/slowlorizz/gokain/worker/src/thread/combination/charset"
@@ -42,14 +43,9 @@ func New(seed []string, chrs charset.CharSet, ht HashType) *Combination {
 
 	cmb := Combination{Source: chrs, Wheels: ComboWheels{Seeds: *wheel.New(&seed), Gears: *wheel.New(&chrs.Chars)}, HashType: ht}
 	cmb.Seed = cmb.Wheels.Seeds.NewIterator()
-	cmb.Gear = &Gear{Itr: cmb.Wheels.Gears.NewIterator()}
+	cmb.Gear = &Gear{Seed: cmb.Seed, Itr: *cmb.Wheels.Gears.NewIterator()}
 
 	return &cmb
-}
-
-func (cmb *Combination) Next() string {
-	str := cmb.Gear.Turn(cmb.Seed)
-	return cmb.Seed.Item.Char + str
 }
 
 func (cmb *Combination) ComputeHash(str *string) string {
@@ -73,8 +69,7 @@ func (cmb *Combination) ComputeHash(str *string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func (cmb *Combination) Cycle() (string, string) {
-	str := cmb.Next()
-
+func (cmb *Combination) Next() (string, string) {
+	str := fmt.Sprintf("%s%s", cmb.Seed.Item.Char, cmb.Gear.Turn(true))
 	return str, cmb.ComputeHash(&str)
 }

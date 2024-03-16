@@ -4,9 +4,11 @@ package ui
 import (
 	"fmt"
 	"log"
+	"time"
 
 	tui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
+	"github.com/slowlorizz/gokain/worker/src/thread/combination"
 )
 
 type (
@@ -18,12 +20,22 @@ type (
 	}
 
 	ThreadComponent struct {
-		ID      int
-		HashC   *TextComponent
-		PtC     *TextComponent
-		widgets []*widgets.Paragraph
-		X       int
-		Y       int
+		ID          int
+		HashC       *widgets.Paragraph
+		PtC         *widgets.Paragraph
+		X           int
+		Y           int
+		HashC_width int
+		PtC_width   int
+	}
+
+	RuntimeClock struct {
+		StartTime time.Time
+		X         int
+		Y         int
+		W         int
+		Widget    *widgets.Paragraph
+		Stop      bool
 	}
 )
 
@@ -36,13 +48,15 @@ const (
 var (
 	Events     <-chan tui.Event
 	Components []*ThreadComponent = make([]*ThreadComponent, 0)
+	Clock      RuntimeClock       = RuntimeClock{}
 )
 
 func Render() {
 	for _, v := range Components {
-		fmt.Printf("Render [%d]\n", v.ID)
 		v.Render()
 	}
+
+	Clock.Render()
 }
 
 func Init() {
@@ -51,68 +65,86 @@ func Init() {
 	}
 
 	defer tui.Close()
+
+	Components = make([]*ThreadComponent, 0)
 }
 
-// ---------------------------------------------------------------------------------------------------- //
+// --------------------------------------------------------------------------
 
-func New_TextComponent(title string, txt string, x int, y int) (*TextComponent, *widgets.Paragraph) {
-	tc := TextComponent{Width: 2, X: x, Y: y}
-
-	tc.Widget = widgets.NewParagraph()
-	tc.Widget.Title = title
-	tc.Widget.SetRect(tc.X, tc.Y, tc.X+tc.Width, tc.Y+LINE_HEIGHT)
-
-	tc.SetText(txt)
-	tc.SetTextColor(tui.ColorWhite)
-	tc.SetBorderColor(tui.ColorWhite)
-
-	return &tc, tc.Widget
-}
-
-func (tc *TextComponent) SetText(txt string) {
-	if len(txt)+2 != tc.Width {
-		tc.Width = len(txt) + 2                                        // add 2 bc. of border
-		tc.Widget.SetRect(tc.X, tc.Y, tc.X+tc.Width, tc.Y+LINE_HEIGHT) // line height is always 3 --> 2x Border 1x Text
-	}
-
-	tc.Widget.Text = txt
-}
-
-func (tc *TextComponent) SetBorderColor(color tui.Color) {
-	tc.Widget.BorderStyle.Fg = color
-}
-
-func (tc *TextComponent) SetTextColor(color tui.Color) {
-	tc.Widget.TextStyle.Fg = color
-}
-
-func (tc *TextComponent) Render() {
-	fmt.Println("Render TextComponent")
-	fmt.Printf("\n COMPONENT:\nTitle: \"%s\"\nText: \"%s\"\nWidth: %d\nX: %d\nY: %d\n", tc.Widget.Title, tc.Widget.Text, tc.Width, tc.X, tc.Y)
-	tui.Render(tc.Widget)
-	fmt.Println("Renderd")
-}
-
-func New_ThreadComponent(id int, x int, y int) *ThreadComponent {
+func New_ThreadComponent(id int, hashType combination.HashType) *ThreadComponent {
 	thc := &ThreadComponent{
-		ID:      id,
-		X:       x,
-		Y:       y,
-		widgets: make([]*widgets.Paragraph, 2),
+		ID:          id,
+		X:           X_SPACER,
+		Y:           (LINE_HEIGHT + Y_SPACER) * (id - 1),
+		HashC:       widgets.NewParagraph(),
+		PtC:         widgets.NewParagraph(),
+		HashC_width: 40,
+		PtC_width:   15,
 	}
 
-	thc.HashC, thc.widgets[0] = New_TextComponent(fmt.Sprintf("[Hash - %d]", id), " ", thc.X, thc.Y)
-	thc.PtC, thc.widgets[1] = New_TextComponent(fmt.Sprintf("[Text - %d]", id), " ", thc.X+thc.HashC.Width+X_SPACER, thc.Y)
+	switch hashType {
+	case combination.SHA1:
+		thc.HashC_width = 40 + 2
+	case combination.SHA256:
+		thc.HashC_width = 64 + 2
+	case combination.SHA512:
+		thc.HashC_width = 128 + 2
+	case combination.MD5:
+		thc.HashC_width = 32 + 2
+	}
+
+	thc.HashC.Title = fmt.Sprintf("[Thread - %d]", id)
+	thc.HashC.Text = ""
+	thc.HashC.SetRect(thc.X, thc.Y, thc.X+thc.HashC_width, thc.Y+LINE_HEIGHT)
+	thc.HashC.Border = true
+	thc.HashC.BorderStyle.Fg = tui.ColorWhite
+	thc.HashC.TextStyle.Fg = tui.ColorWhite
+
+	thc.PtC.Text = ""
+	thc.PtC.SetRect(thc.X+thc.HashC_width+X_SPACER, thc.Y, thc.X+thc.HashC_width+X_SPACER+thc.PtC_width, thc.Y+LINE_HEIGHT)
+	thc.PtC.Border = true
+	thc.PtC.BorderStyle.Fg = tui.ColorWhite
+	thc.PtC.TextStyle.Fg = tui.ColorWhite
 
 	return thc
 }
 
 func (thc *ThreadComponent) Render() {
-	fmt.Println("Render Thread Component")
-	tui.Render(thc.widgets[0], thc.widgets[1])
+	tui.Render(thc.HashC, thc.PtC)
 }
 
 func (thc *ThreadComponent) SetStyleFound() {
-	thc.HashC.SetBorderColor(tui.ColorGreen)
-	thc.PtC.SetBorderColor(tui.ColorGreen)
+	thc.HashC.BorderStyle.Fg = tui.ColorGreen
+	thc.PtC.BorderStyle.Fg = tui.ColorGreen
+}
+
+// ---------------------------------------------------------------------------------------------
+
+func (rtc *RuntimeClock) Init() {
+	Clock = RuntimeClock{
+		X:         X_SPACER,
+		Y:         (LINE_HEIGHT + Y_SPACER) * len(Components),
+		W:         20,
+		StartTime: time.Now(),
+		Widget:    widgets.NewParagraph(),
+		Stop:      false,
+	}
+
+	rtc.Widget.Title = "Duration"
+	rtc.Widget.Text = ""
+	rtc.Widget.SetRect(rtc.X, rtc.Y, rtc.X+rtc.W, rtc.Y+LINE_HEIGHT)
+	rtc.Widget.Border = true
+	rtc.Widget.BorderStyle.Fg = tui.ColorWhite
+	rtc.Widget.TextStyle.Fg = tui.ColorWhite
+}
+
+func (rtc *RuntimeClock) Tick() {
+	if !rtc.Stop {
+		rtc.Widget.Text = (time.Since(rtc.StartTime) % time.Second).String()
+	}
+}
+
+func (rtc *RuntimeClock) Render() {
+	rtc.Tick()
+	tui.Render(rtc.Widget)
 }

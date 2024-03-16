@@ -1,8 +1,6 @@
 ---
 node:
   name: dev-tower
-  tui:
-    show: yes
   threads:
     max: 10
     default: 2
