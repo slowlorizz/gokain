@@ -140,7 +140,9 @@ func (rtc *RuntimeClock) Init() {
 
 func (rtc *RuntimeClock) Tick() {
 	if !rtc.Stop {
-		rtc.Widget.Text = (time.Since(rtc.StartTime) % time.Second).String()
+		d := time.Since(rtc.StartTime)
+		d -= d % time.Second
+		rtc.Widget.Text = d.String()
 	}
 }
 

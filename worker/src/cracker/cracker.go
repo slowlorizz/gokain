@@ -17,17 +17,42 @@ var seeds [][]string
 var StartTime time.Time
 var RunTime time.Duration
 var CtrlCH chan struct{}
+var Threads []*thread.Thread = make([]*thread.Thread, 0)
 
 func Start() {
+	/* 16.03.2024
+	>B1a% --> 50min 20s (sha256)
+	*/
+
 	DistributeSeeds()
+	StartThreads()
+	Handle()
+}
+
+func DistributeSeeds() {
+	seeds = make([][]string, args.Threads)
+
+	for i := 0; i < args.Threads; i++ {
+		seeds[i] = make([]string, 0)
+	}
+
+	for i, c := range chrs.Chars {
+		seeds[i%args.Threads] = append(seeds[i%args.Threads], c)
+	}
+}
+
+func StartThreads() {
 	for i, v := range seeds {
 		th := thread.New(i+1, args.Hash, v, args.HashType, chrs, thread.FOUND_CH, thread.JOIN_CH)
+		Threads = append(Threads, th)
 		ui.Components = append(ui.Components, th.UiC)
 		go th.Start()
 	}
 
 	ui.Clock.Init()
+}
 
+func Handle() {
 	ui.Events = tui.PollEvents()
 	for {
 		select {
@@ -35,7 +60,7 @@ func Start() {
 			switch e.ID {
 			case "q", "<C-c>":
 				thread.StopAll()
-				close(CtrlCH)
+				Stop()
 				return
 			}
 		case res := <-thread.FOUND_CH:
@@ -50,14 +75,6 @@ func Start() {
 	}
 }
 
-func DistributeSeeds() {
-	seeds = make([][]string, args.Threads)
-
-	for i := 0; i < args.Threads; i++ {
-		seeds[i] = make([]string, 0)
-	}
-
-	for i, c := range chrs.Chars {
-		seeds[i%args.Threads] = append(seeds[i%args.Threads], c)
-	}
+func Stop() {
+	close(CtrlCH)
 }

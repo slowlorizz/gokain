@@ -9,7 +9,7 @@ import (
 	tui "github.com/gizak/termui/v3"
 )
 
-func main() {
+func setup() {
 	err := args.Load()
 
 	if err != nil {
@@ -21,8 +21,17 @@ func main() {
 	}
 
 	defer tui.Close()
+}
+
+func main() {
+	setup()
 
 	go cracker.Start()
-
 	<-cracker.CtrlCH
+
+	end()
+}
+
+func end() {
+	defer tui.Close()
 }
