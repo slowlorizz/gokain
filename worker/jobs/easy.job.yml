@@ -1,14 +1,12 @@
 ---
 job:
-  id: 1
+  id: 3
   threads: 6
   hash:
-    string: 2f524e687de733ce5f02e3c9f92fc90777accafc0c96b59453ab6b909d62fa73
+    string: dbfcfd0d87220f629339bd3adcf452d083fde3246625fb3a93e314f833e20d37
     type: sha256
   charset:
     # includes the listed, if not listed its not included
     standard:
       - numbers
       - lower_case
-      - upper_case
-      - special
