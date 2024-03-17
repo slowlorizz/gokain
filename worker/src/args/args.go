@@ -2,7 +2,6 @@ package args
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/slowlorizz/gokain/worker/src/exc"
 )
@@ -10,15 +9,15 @@ import (
 var JobPath string
 
 func Load() *exc.Exception {
-	jn := flag.String("job", "", "name of the Job to run, its the file name <job-name>.job.yml, without the extensions")
+	jn := flag.String("job", "", "file path to the <name>.job.yml file")
 
 	flag.Parse()
 
 	if *jn == "" {
-		return exc.NewFatal(exc.UserArgsException, "no_job_filename", "No Job-Filename has been submitted", nil)
+		return exc.NewFatal(exc.UserArgsException, "no_job_filepath", "No Job-Filepath has been submitted", nil)
 	}
 
-	JobPath = fmt.Sprintf("./jobs/%s.job.yml", *jn)
+	JobPath = *jn
 
 	return nil
 }

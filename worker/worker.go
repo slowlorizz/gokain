@@ -25,7 +25,7 @@ func main() {
 
 	//------------------
 
-	go cracker.Start(job.New("./jobs/j1.job.yml"))
+	go cracker.Start(job.New(args.JobPath))
 
 	//------------------
 	cracker.Await()
