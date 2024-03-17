@@ -12,7 +12,8 @@
 
 ### v2.0.0
 ```shell
-.\gokain.exe --job <path to job.yml>
+cd gokain\worker
+.\bin\gokain.worker.v2.exe --job <path to job.yml>
 ```
 
 ... needs coresponding job-file in /worker/jobs with name `<job-name>.job.yml`
