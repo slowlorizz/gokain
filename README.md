@@ -12,7 +12,8 @@
 
 ### v2.0.0
 ```shell
-.\gokain.exe --job <job-name>
+.\gokain.exe --job <path to job.yml>
 ```
 
 ... needs coresponding job-file in /worker/jobs with name `<job-name>.job.yml`
+the exe needs to be run in worker folder, since the charset-config uses relative paths, needs to be fixed
