@@ -3,8 +3,8 @@ package job
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
-	"github.com/slowlorizz/gokain/worker/src/cracker"
 	"github.com/slowlorizz/gokain/worker/src/thread/combination"
 	"github.com/slowlorizz/gokain/worker/src/thread/combination/charset"
 	"gopkg.in/yaml.v3"
@@ -45,7 +45,7 @@ func New(path string) *Job {
 func ReadFile(path string) (*JobFile, error) {
 	jf := &JobFile{}
 
-	buf, err := os.ReadFile(path)
+	buf, err := os.ReadFile(GetPath(path))
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +56,11 @@ func ReadFile(path string) (*JobFile, error) {
 	}
 
 	return jf, err
+}
+
+func GetPath(path string) string {
+	p, _ := filepath.Abs(path)
+	return p
 }
 
 func GetHashType(ht string) combination.HashType {
@@ -82,8 +87,4 @@ func BuildCharset(selection map[string][]string) *charset.CharSet {
 	}
 
 	return chrs
-}
-
-func (J *Job) Start() {
-	cracker.Start(J)
 }

@@ -3,7 +3,6 @@ package cracker
 import (
 	"time"
 
-	"github.com/slowlorizz/gokain/worker/src/args"
 	"github.com/slowlorizz/gokain/worker/src/job"
 	"github.com/slowlorizz/gokain/worker/src/thread"
 	"github.com/slowlorizz/gokain/worker/src/ui"
@@ -15,9 +14,10 @@ var Result thread.ResultPair
 var seeds [][]string
 var StartTime time.Time
 var RunTime time.Duration
-var CtrlCH chan struct{}
+var CtrlCH chan struct{} = make(chan struct{})
 var Threads []*thread.Thread = make([]*thread.Thread, 0)
 var Job *job.Job
+var Stopped bool = false
 
 func Start(j *job.Job) {
 	/* 16.03.2024
@@ -27,26 +27,27 @@ func Start(j *job.Job) {
 		"standard": {"numbers", "lower_case", "upper_case", "special"},
 		"extended": {"lower_case", "upper_case", "special"},
 	})*/
+	Job = j
 	DistributeSeeds()
 	StartThreads()
 	Handle()
 }
 
 func DistributeSeeds() {
-	seeds = make([][]string, args.Threads)
+	seeds = make([][]string, Job.Threads)
 
-	for i := 0; i < args.Threads; i++ {
+	for i := 0; i < Job.Threads; i++ {
 		seeds[i] = make([]string, 0)
 	}
 
 	for i, c := range Job.Chars {
-		seeds[i%args.Threads] = append(seeds[i%args.Threads], c)
+		seeds[i%Job.Threads] = append(seeds[i%Job.Threads], c)
 	}
 }
 
 func StartThreads() {
 	for i, v := range seeds {
-		th := thread.New(i+1, args.Hash, v, args.HashType, Job.Chars, thread.FOUND_CH, thread.JOIN_CH)
+		th := thread.New(i+1, Job.Hash, v, Job.HashType, Job.Chars, thread.FOUND_CH, thread.JOIN_CH)
 		Threads = append(Threads, th)
 		ui.Components = append(ui.Components, th.UiC)
 		go th.Start()
@@ -79,5 +80,12 @@ func Handle() {
 }
 
 func Stop() {
-	close(CtrlCH)
+	if !Stopped {
+		close(CtrlCH)
+		Stopped = true
+	}
+}
+
+func Await() {
+	<-CtrlCH
 }

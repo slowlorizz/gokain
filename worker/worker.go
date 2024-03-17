@@ -5,6 +5,7 @@ import (
 
 	"github.com/slowlorizz/gokain/worker/src/args"
 	"github.com/slowlorizz/gokain/worker/src/cracker"
+	"github.com/slowlorizz/gokain/worker/src/job"
 
 	tui "github.com/gizak/termui/v3"
 )
@@ -24,8 +25,8 @@ func main() {
 
 	//------------------
 
-	go cracker.Start()
+	go cracker.Start(job.New("./jobs/j1.job.yml"))
 
 	//------------------
-	<-cracker.CtrlCH
+	cracker.Await()
 }
