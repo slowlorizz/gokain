@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"hash"
 
-	"github.com/slowlorizz/gokain/worker/src/thread/combination/charset"
 	"github.com/slowlorizz/gokain/worker/src/thread/combination/wheel"
 )
 
@@ -25,7 +24,6 @@ type (
 		Seed *wheel.Iterator
 		Gear *Gear
 
-		Source   charset.CharSet
 		Wheels   ComboWheels
 		HashType HashType
 	}
@@ -38,10 +36,8 @@ const (
 	MD5             = 4
 )
 
-func New(seed []string, chrs charset.CharSet, ht HashType) *Combination {
-	chrs.Build()
-
-	cmb := Combination{Source: chrs, Wheels: ComboWheels{Seeds: *wheel.New(&seed), Gears: *wheel.New(&chrs.Chars)}, HashType: ht}
+func New(seed []string, chrs []string, ht HashType) *Combination {
+	cmb := Combination{Wheels: ComboWheels{Seeds: *wheel.New(&seed), Gears: *wheel.New(&chrs)}, HashType: ht}
 	cmb.Seed = cmb.Wheels.Seeds.NewIterator()
 	cmb.Gear = &Gear{Seed: cmb.Seed, Itr: *cmb.Wheels.Gears.NewIterator()}
 

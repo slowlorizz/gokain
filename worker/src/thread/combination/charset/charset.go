@@ -1,76 +1,67 @@
 package charset
 
-import "strings"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
 
-type CharSet struct {
-	Numbers   bool
-	LowerCase bool
-	UpperCase bool
-	Special   bool
-	Ext_LC    bool // extended lowercase --> includes some region specific characters
-	Ext_UC    bool // extended uppercase --> includes some region specific characters
-	Ext_Spc   bool // extended special-characters --> includes some region specific characters
-	Chars     []string
-}
-
-const (
-	NUMBERS    string = "0123456789"                       // 10
-	LOWER_CASE string = "abcdefghijklmnopqrstuvwxyz"       // 26
-	UPPER_CASE string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"       // 26
-	SPECIAL    string = "+!$-_*%&/=?~:.,;|@#\"'(){}[]<>\\" // 30
-	EXT_LC     string = "äöüéàè"                           // 6
-	EXT_UC     string = "ÄÖÜÉÀÈ"                           // 6
-	EXT_SPC    string = "°§£^`¨¬¢€"                        // 9
+	"gopkg.in/yaml.v3"
 )
 
-func (cs *CharSet) Add(str string) {
-	cs.Chars = append(cs.Chars, strings.Split(str, "")...)
+var CONFIG_FILE string = GetPath("./config/charset.config.yml") //"../../../../config/charset.config.yml"
+
+type CharSet struct {
+	ConfigFile string
+	Config     Config
+	Selection  map[string][]string
+	Chars      []string
 }
 
-func (cs *CharSet) Build() {
-	cs.Chars = make([]string, 0, 113)
+type Config struct {
+	Charset map[string]map[string][]string
+}
 
-	if cs.Numbers {
-		cs.Add(NUMBERS)
+type JobSelection struct {
+	Charset map[string][]string
+}
+
+func New(js JobSelection) (*CharSet, error) {
+	chrs := CharSet{
+		ConfigFile: CONFIG_FILE,
+		Config:     Config{},
+		Selection:  js.Charset,
+		Chars:      make([]string, 0),
 	}
 
-	if cs.LowerCase {
-		cs.Add(LOWER_CASE)
+	err := chrs.Config.ReadFile(chrs.ConfigFile)
+	chrs.Include(chrs.Selection)
+
+	return &chrs, err
+}
+
+func (C *Config) ReadFile(path string) error {
+	buf, err := os.ReadFile(path)
+	if err != nil {
+		return err
 	}
 
-	if cs.Ext_LC {
-		cs.Add(EXT_LC)
+	err = yaml.Unmarshal(buf, C)
+	if err != nil {
+		return fmt.Errorf("in file %q: %w", path, err)
 	}
 
-	if cs.UpperCase {
-		cs.Add(UPPER_CASE)
-	}
+	return err
+}
 
-	if cs.Ext_UC {
-		cs.Add(EXT_UC)
-	}
-
-	if cs.Special {
-		cs.Add(SPECIAL)
-	}
-
-	if cs.Ext_Spc {
-		cs.Add(EXT_SPC)
+func (chrs *CharSet) Include(s map[string][]string) {
+	for k, v := range s {
+		for _, x := range v {
+			chrs.Chars = append(chrs.Chars, chrs.Config.Charset[k][x]...)
+		}
 	}
 }
 
-func New(nums bool, lc bool, uc bool, spc bool, ext_lc bool, ext_uc bool, ext_spc bool) *CharSet {
-	cs := CharSet{
-		Numbers:   nums,
-		LowerCase: lc,
-		UpperCase: uc,
-		Special:   spc,
-		Ext_LC:    ext_lc,
-		Ext_UC:    ext_uc,
-		Ext_Spc:   ext_spc,
-	}
-
-	cs.Build()
-
-	return &cs
+func GetPath(path string) string {
+	p, _ := filepath.Abs(path)
+	return p
 }

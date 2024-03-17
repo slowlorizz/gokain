@@ -2,7 +2,6 @@ package thread
 
 import (
 	"github.com/slowlorizz/gokain/worker/src/thread/combination"
-	"github.com/slowlorizz/gokain/worker/src/thread/combination/charset"
 	"github.com/slowlorizz/gokain/worker/src/ui"
 )
 
@@ -29,7 +28,7 @@ var JOIN_CH (chan Signal) = make(chan Signal)
 
 var JOINED bool = false
 
-func New(id int, ct string, seeds []string, ht combination.HashType, cs charset.CharSet, foundCH chan ResultPair, joinCH chan Signal) *Thread {
+func New(id int, ct string, seeds []string, ht combination.HashType, cs []string, foundCH chan ResultPair, joinCH chan Signal) *Thread {
 	return &Thread{
 		ID:          id,
 		Combination: *combination.New(seeds, cs, ht),

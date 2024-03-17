@@ -5,8 +5,7 @@ job:
   hash:
     string: a9993e364706816aba3e25717850c26c9cd0d89d
     type: sha1
-    encoding: hex
-  chars:
+  charset:
     # includes the listed, if not listed its not included
     standard:
       - numbers

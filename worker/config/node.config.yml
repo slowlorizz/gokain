@@ -4,4 +4,4 @@ node:
   threads:
     max: 10
     default: 2
-      
+    optimal: 5
