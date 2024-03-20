@@ -1,0 +1,14 @@
+---
+job:
+  id: 4
+  threads: 10
+  hash:
+    string: f68bde5fc235cbcc4e0cda5195c80ec3058b9178dfdaaae4db69959bf025ee178a94c221d5b8690ba8a578b488ee8c4c132f66c9408d7038b29f49fdacdc84b1
+    type: sha512
+  charset:
+    # includes the listed, if not listed its not included
+    standard:
+      - numbers
+      - lower_case
+      - upper_case
+      - special
